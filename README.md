@@ -36,7 +36,7 @@ const zOdd = zInt.refine(
     'should be odd'
 )
 
-// zaphod Fn
+// zaphod Fn incEven: (x: zEven) => zOdd 
 const incEven = Fn(
     z.tuple([zEven]),   // schema of argslist: [zEven]
     zOdd,               // schema of return value: zOdd
