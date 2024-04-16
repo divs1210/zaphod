@@ -1,5 +1,7 @@
 # Zaphod
 
+![CI](https://github.com/divs1210/zaphod/actions/workflows/node.js.yml/badge.svg)
+
 TypeScript library for writing 
 
 fully typechecked + runtime validated functions 
