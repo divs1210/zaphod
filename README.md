@@ -1,6 +1,7 @@
 # Zaphod
 
-![CI](https://github.com/divs1210/zaphod/actions/workflows/node.js.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+ ![CI](https://github.com/divs1210/zaphod/actions/workflows/node.js.yml/badge.svg)
 
 TypeScript library for writing 
 

@@ -1,6 +1,7 @@
 {
   "name": "@divs1210/zaphod",
   "description": "typechecked + runtime validated functions",
+  "author": "Divyansh Prakash",
   "homepage": "https://github.com/divs1210/zaphod",
   "repository": {
     "type": "git",
@@ -12,8 +13,14 @@
     "test": "jest",
     "dev": "jest --watch"
   },
-  "keywords": [],
-  "author": "Divyansh Prakash",
+  "keywords": [
+    "typescript",
+    "schema",
+    "validation",
+    "type",
+    "inference",
+    "zod"
+  ],
   "license": "MIT",
   "dependencies": {
     "zod": "^3.22.4"
