@@ -2,7 +2,10 @@
   "name": "@divs1210/zaphod",
   "description": "typechecked + runtime validated functions",
   "homepage": "https://github.com/divs1210/zaphod",
-  "repository": "https://github.com/divs1210/zaphod.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divs1210/zaphod.git"
+  },
   "version": "0.1.0",
   "main": "index.ts",
   "scripts": {
