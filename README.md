@@ -45,7 +45,7 @@ const incEven = Fn(
 )
 ```
 
-`isEven` is now a fully statically typechecked + runtime validated function!
+`incEven` is now a fully statically typechecked + runtime validated function!
 
 ```typescript
 incEven(2)   // => 3
