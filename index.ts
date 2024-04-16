@@ -44,8 +44,7 @@ export function Fn
     ) {
     return function (...args: Infer<ArgsPred>) {
         if (validationMode === ValidationMode.Args || validationMode === ValidationMode.Both)
-            if(argsPred)
-                args = validate(argsPred, args)
+            args = validate(argsPred, args)
 
         let ret = f(...args)
         if (validationMode === ValidationMode.Ret || validationMode === ValidationMode.Both)
