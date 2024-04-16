@@ -8,6 +8,12 @@ fully typechecked + runtime validated functions
 
 using [Zod](https://github.com/colinhacks/zod).
 
+## Installation
+
+```
+$ npm i @divs1210/zaphod
+```
+
 ## Usage
 
 ```typescript
