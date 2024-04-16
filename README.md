@@ -19,7 +19,7 @@ $ npm i @divs1210/zaphod
 
 ```typescript
 import z from 'zod'
-import { Fn, ValidationMode, check } from 'zaphod'
+import { Fn, ValidationMode, check } from '@divs1210/zaphod'
 
 // zod schema for integers
 const zInt = z.number().int()
@@ -43,7 +43,11 @@ const incEven = Fn(
     x => x + 1,         // actual implementation
     ValidationMode.Both // Args / Ret / Both / None
 )
+```
 
+`isEven` is now a fully statically typechecked + runtime validated function!
+
+```typescript
 incEven(2)   // => 3
 incEven('2') // => TS error (string is not number)
 incEven(1)   // => validation error (1 is not even)
@@ -52,7 +56,7 @@ incEven(1)   // => validation error (1 is not even)
 ## Generic functions
 
 ```typescript
-import { GenericFn } from 'zaphod'
+import { GenericFn } from '@divs1210/zaphod'
 
 // X, Y, and L are called "PredVars"
 const map = GenericFn(<X extends Pred, Y extends Pred>({ X, Y, L }: { X: X, Y: Y, L: number }) =>
@@ -76,7 +80,7 @@ const ys = map({ X: zInt, Y: zInt, L: xs.length })(xs, x => x + 1)
 ### Empty argslist
 
 ```typescript
-import { EmptyTuple } from 'zaphod'
+import { EmptyTuple } from '@divs1210/zaphod'
 
 const f = Fn(
     EmptyTuple,   // empty argslist
