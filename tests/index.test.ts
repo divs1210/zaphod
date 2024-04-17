@@ -1,5 +1,5 @@
 import z from 'zod'
-import { Fn, Schema, check } from '..'
+import { Fn, Schema, ValidationMode, check } from '..'
 
 const zInt = z.number().int()
 
@@ -51,13 +51,37 @@ describe(Fn, () => {
     })
 
 
-    it('throws if an invalid value is returned', () => {
-        const f = Fn()
+    it('honours validation mode', () => {
+        const f1 = Fn()
             .returns(z.string())
             // @ts-expect-error
             .implement(() => 1)
 
-        expect(f).toThrow('Expected string')
+        const f2 = Fn()
+            .args(zInt)
+            .returns(z.string())
+            .setValidationMode(ValidationMode.None)
+            // @ts-expect-error
+            .implement(x => 1)
+        
+        const f3 = Fn()
+            .returns(z.string())
+            .setValidationMode(ValidationMode.Args)
+            // @ts-expect-error
+            .implement(() => 1)
+
+        const f4 = Fn()
+            .args(zInt)
+            .returns(zInt)
+            .setValidationMode(ValidationMode.Ret)
+            .implement(x => 1)
+
+        expect(f1).toThrow('Expected string')
+        // @ts-expect-error
+        expect(f2('hi')).toBe(1)
+        expect(f3()).toBe(1)
+        // @ts-expect-error
+        expect(f4('hi')).toBe(1)
     })
 })
 

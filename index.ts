@@ -43,7 +43,7 @@ export interface Fn<ArgsSchema extends PossiblyEmptyTupleSchema, RetSchema exten
     args: <Items extends ArrayOfSchemas>(...items: Items) => Fn<z.ZodTuple<Items, UnknownSchema>, RetSchema>;
 
     returnType: () => RetSchema;
-    returns: <NewRetSchema extends Schema>(retSchema: NewRetSchema) => FunctionSchema<ArgsSchema, NewRetSchema>;
+    returns: <NewRetSchema extends Schema>(retSchema: NewRetSchema) => Fn<ArgsSchema, NewRetSchema>;
 
     functionType: () => FunctionSchema<ArgsSchema, RetSchema>;
 
