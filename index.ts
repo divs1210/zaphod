@@ -3,13 +3,14 @@ import z from 'zod'
 // ## Aliases
 // ==========
 export type Schema = z.ZodType
-export const Schema = z.ZodType
-
-export type TupleSchema = z.AnyZodTuple
-
-export type FunctionSchema<ArgsSchema extends TupleSchema, RetSchema extends Schema> = z.ZodFunction<ArgsSchema, RetSchema>
+export type UnknownSchema = z.ZodUnknown
+export type PossiblyEmptyTupleSchema = z.AnyZodTuple
+export type TupleSchema = typeof z.ZodTuple
+export type FunctionSchema<ArgsSchema extends PossiblyEmptyTupleSchema, RetSchema extends Schema> = z.ZodFunction<ArgsSchema, RetSchema>
 
 export type Infer<P extends Schema> = z.infer<P>
+
+export const Schema = z.ZodType
 
 
 // ## Helpers
@@ -35,11 +36,11 @@ export enum ValidationMode {
 
 // ## Typechecked + validated functions
 // ====================================
-export type ArrayOfSchemas = Parameters<(typeof z.ZodTuple)["create"]>[0]
+export type ArrayOfSchemas = Parameters<TupleSchema["create"]>[0]
 
-export interface Fn<ArgsSchema extends TupleSchema | TupleSchema, RetSchema extends Schema> {
+export interface Fn<ArgsSchema extends PossiblyEmptyTupleSchema, RetSchema extends Schema> {
     parameters: () => ArgsSchema;
-    args: <Items extends ArrayOfSchemas>(...items: Items) => Fn<z.ZodTuple<Items, z.ZodUnknown>, RetSchema>;
+    args: <Items extends ArrayOfSchemas>(...items: Items) => Fn<z.ZodTuple<Items, UnknownSchema>, RetSchema>;
 
     returnType: () => RetSchema;
     returns: <NewRetSchema extends Schema>(retSchema: NewRetSchema) => FunctionSchema<ArgsSchema, NewRetSchema>;
@@ -55,7 +56,7 @@ export interface Fn<ArgsSchema extends TupleSchema | TupleSchema, RetSchema exte
         : z.OuterTypeOfFunction<ArgsSchema, RetSchema>;
 }
 
-export function Fn<ArgsSchema extends TupleSchema, RetSchema extends Schema>(): Fn<ArgsSchema, RetSchema> {
+export function Fn<ArgsSchema extends PossiblyEmptyTupleSchema, RetSchema extends Schema>(): Fn<ArgsSchema, RetSchema> {
     return {
         parameters: () => z.tuple([]) as ArgsSchema,
         args: function <Items extends ArrayOfSchemas>(...schemas: Items) {
