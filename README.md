@@ -53,13 +53,10 @@ incEven('2') // => TS error (string is not number)
 incEven(1)   // => validation error (1 is not even)
 ```
 
-## Generic functions
+### Generic functions
 
 ```typescript
-import { GenericFn } from '@divs1210/zaphod'
-
-// X, Y, and L are called "PredVars"
-const map = GenericFn(<X extends Pred, Y extends Pred>({ X, Y, L }: { X: X, Y: Y, L: number }) =>
+const map = <X extends Pred, Y extends Pred>(X: X, Y: Y, L: number) =>
     Fn(
         z.tuple([                         // argslist: [
             z.array(X).length(L),         //   X[] of length L
@@ -69,29 +66,45 @@ const map = GenericFn(<X extends Pred, Y extends Pred>({ X, Y, L }: { X: X, Y: Y
         (xs, f) => xs.map(x => f(x)),
         ValidationMode.Both
     )
-)
 
 const xs = [1, 2, 3]
-const ys = map({ X: zInt, Y: zInt, L: xs.length })(xs, x => x + 1)
+const ys = map(zInt, zInt, xs.length)(xs, x => x + 1)
 ```
 
-## Edge cases
+## Use cases
 
-### Empty argslist
+If you squint, you might see dependent types in here...
+
+## ...but Zod already has `z.function()`?
+
+Yes, Zod already provides a way to define function schemas and implement them:
 
 ```typescript
-import { EmptyTuple } from '@divs1210/zaphod'
-
-const f = Fn(
-    EmptyTuple,   // empty argslist
-    z.number(),
-    () => 1, 
-    ValidationMode.Both
-)
-
-f() // TS complains that no args were provided
+const f = z
+    .function()
+    .args(z.number())
+    .returns(z.string())
+    .implement(x => '' + x)
 ```
 
+but it will ALWAYS validate the arguments.
+
+Zaphod allows you to turn off validation for arguments, return values, or both,
+thereby enabling writing code in a style akin to dependent typing.
+
+You can validate all functions during development,
+and disable validation for all but the edge functions (I/O) in production.
+
+Though this library could possibly be better written as:
+
+```typescript
+const f = z
+    .function()
+    .args(z.number())
+    .returns(z.string())
+    .implement(x => '' + x)
+    .validate(ValidationMode.BOTH)
+```
 
 ## License
 

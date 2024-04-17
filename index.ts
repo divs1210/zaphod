@@ -5,9 +5,7 @@ import z from 'zod'
 export type Pred = z.ZodType
 export const Pred = z.ZodType
 
-export type Tuple = z.ZodTuple
-export const Tuple = z.ZodTuple
-export const EmptyTuple = z.tuple([]) as unknown as Tuple
+export type TuplePred = z.AnyZodTuple
 
 export type Infer<P extends Pred> = z.infer<P>
 
@@ -36,7 +34,7 @@ export enum ValidationMode {
 // ## Typechecked + validated functions
 // ====================================
 export function Fn
-    <ArgsPred extends Tuple, RetPred extends Pred>(
+    <ArgsPred extends TuplePred, RetPred extends Pred>(
         argsPred: ArgsPred,
         retPred: RetPred,
         f: (...args: Infer<ArgsPred>) => Infer<RetPred>,
@@ -52,11 +50,4 @@ export function Fn
 
         return ret as Infer<RetPred>
     }
-}
-
-export function GenericFn
-    <PredVars extends object, ArgsPred extends Tuple, RetPred extends Pred>(
-        f: (vars: PredVars) => (...args: Infer<ArgsPred>) => Infer<RetPred>
-    ) {
-    return (vars: PredVars) => f(vars)
 }

@@ -1,5 +1,5 @@
 import z from 'zod'
-import { EmptyTuple, Fn, GenericFn, Pred, ValidationMode, check } from '..'
+import { Fn, Pred, ValidationMode, check } from '..'
 
 const zInt = z.number().int()
 
@@ -21,6 +21,13 @@ describe(Fn, () => {
         ValidationMode.Both
     )
 
+    const addX = Fn(
+        z.tuple([zInt]),
+        z.function().args(zInt).returns(zInt),
+        x => y => x + y,
+        ValidationMode.Both
+    )
+
     it('incEven returns an odd number', () => {
         let x = 2
         let y = incEven(x)
@@ -36,9 +43,19 @@ describe(Fn, () => {
         expect(() => incEven(3)).toThrow('should be even')
     })
 
+    it('addX returns adding function', () => {
+        const add5 = addX(5)
+        expect(check(z.function().args(zInt).returns(zInt), add5)).toBe(true)
+    })
+
+    it('function returned by addX works as expected', () => {
+        const add5 = addX(5)
+        expect(add5(1)).toBe(6)
+    })
+
     it('throws if an invalid value is returned', () => {
         const f = Fn(
-            EmptyTuple,
+            z.tuple([]),
             z.string(),
             // @ts-expect-error
             () => 1,
@@ -49,23 +66,33 @@ describe(Fn, () => {
 })
 
 
-// ## Generic fn
-// ==============
-describe(GenericFn, () => {
-    const map = GenericFn(<X extends Pred, Y extends Pred>({ X, Y, L }: { X: X, Y: Y, L: number }) =>
+describe('Generic Fns', () => {
+    const map = <X extends Pred, Y extends Pred>(X: X, Y: Y, L: number) =>
         Fn(
             z.tuple([
                 z.array(X).length(L),
-                z.function(z.tuple([X]), Y)
+                z.function().args(X).returns(Y)
             ]),
             z.array(Y).length(L),
             (xs, f) => xs.map(x => f(x)),
             ValidationMode.Both
         )
-    )
+
+    const reduce = <X extends Pred, Acc extends Pred>(X: X, Acc: Acc) =>
+        Fn(
+            z.tuple([
+                z.array(X),
+                z.function().args(Acc, X).returns(Acc),
+                Acc
+            ]),
+            Acc,
+            (xs, f, init) => xs.reduce((acc, x) => f(acc, x), init),
+            ValidationMode.Both
+        )
 
     let xs = [1, 2, 3]
-    let ys = map({ X: zInt, Y: zInt, L: xs.length })(xs, x => x + 1)
+    let ys = map(zInt, zInt, xs.length)(xs, x => x + 1)
+    let zs = reduce(zInt, z.string())(xs, (acc, x) => acc + x, '')
 
     it('map returns Y[]', () => {
         expect(check(z.array(zInt), ys)).toBe(true)
@@ -77,5 +104,9 @@ describe(GenericFn, () => {
 
     it('map returns array of same length as input', () => {
         expect(ys.length).toBe(xs.length)
+    })
+
+    it('map returns array of same length as input', () => {
+        expect(zs).toBe('123')
     })
 })
