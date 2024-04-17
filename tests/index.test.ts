@@ -1,32 +1,23 @@
 import z from 'zod'
-import { Fn, Pred, ValidationMode, check } from '..'
+import { Fn, Schema, check } from '..'
 
 const zInt = z.number().int()
 
+const zEven = zInt.refine(
+    x => x % 2 === 0,
+    'should be even'
+)
+
+const zOdd = zInt.refine(
+    x => !check(zEven, x),
+    'should be odd'
+)
+
 describe(Fn, () => {
-    const zEven = zInt.refine(
-        x => x % 2 === 0,
-        'should be even'
-    )
-
-    const zOdd = zInt.refine(
-        x => !check(zEven, x),
-        'should be odd'
-    )
-
-    const incEven = Fn(
-        z.tuple([zEven]),
-        zOdd,
-        x => x + 1,
-        ValidationMode.Both
-    )
-
-    const addX = Fn(
-        z.tuple([zInt]),
-        z.function().args(zInt).returns(zInt),
-        x => y => x + y,
-        ValidationMode.Both
-    )
+    const incEven = Fn()
+        .args(zEven)
+        .returns(zOdd)
+        .implement(x => x + 1)
 
     it('incEven returns an odd number', () => {
         let x = 2
@@ -43,6 +34,12 @@ describe(Fn, () => {
         expect(() => incEven(3)).toThrow('should be even')
     })
 
+
+    const addX = Fn()
+        .args(zInt)
+        .returns(z.function().args(zInt).returns(zInt))
+        .implement(x => y => x + y)
+
     it('addX returns adding function', () => {
         const add5 = addX(5)
         expect(check(z.function().args(zInt).returns(zInt), add5)).toBe(true)
@@ -53,42 +50,35 @@ describe(Fn, () => {
         expect(add5(1)).toBe(6)
     })
 
+
     it('throws if an invalid value is returned', () => {
-        const f = Fn(
-            z.tuple([]),
-            z.string(),
+        const f = Fn()
+            .returns(z.string())
             // @ts-expect-error
-            () => 1,
-            ValidationMode.Ret
-        )
+            .implement(() => 1)
+
         expect(f).toThrow('Expected string')
     })
 })
 
 
 describe('Generic Fns', () => {
-    const map = <X extends Pred, Y extends Pred>(X: X, Y: Y, L: number) =>
-        Fn(
-            z.tuple([
-                z.array(X).length(L),
-                z.function().args(X).returns(Y)
-            ]),
-            z.array(Y).length(L),
-            (xs, f) => xs.map(x => f(x)),
-            ValidationMode.Both
+    const map = <X extends Schema, Y extends Schema>(X: X, Y: Y, L: number) => Fn()
+        .args(
+            z.array(X).length(L),
+            z.function().args(X).returns(Y)
         )
+        .returns(z.array(Y).length(L))
+        .implement((xs, f) => xs.map(x => f(x)))
 
-    const reduce = <X extends Pred, Acc extends Pred>(X: X, Acc: Acc) =>
-        Fn(
-            z.tuple([
-                z.array(X),
-                z.function().args(Acc, X).returns(Acc),
-                Acc
-            ]),
-            Acc,
-            (xs, f, init) => xs.reduce((acc, x) => f(acc, x), init),
-            ValidationMode.Both
+    const reduce = <X extends Schema, Acc extends Schema>(X: X, Acc: Acc) => Fn()
+        .args(
+            z.array(X),
+            z.function().args(Acc, X).returns(Acc),
+            Acc
         )
+        .returns(Acc)
+        .implement((xs, f, init) => xs.reduce((acc, x) => f(acc, x), init))
 
     let xs = [1, 2, 3]
     let ys = map(zInt, zInt, xs.length)(xs, x => x + 1)

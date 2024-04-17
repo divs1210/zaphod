@@ -2,22 +2,24 @@ import z from 'zod'
 
 // ## Aliases
 // ==========
-export type Pred = z.ZodType
-export const Pred = z.ZodType
+export type Schema = z.ZodType
+export const Schema = z.ZodType
 
-export type TuplePred = z.AnyZodTuple
+export type TupleSchema = z.AnyZodTuple
 
-export type Infer<P extends Pred> = z.infer<P>
+export type FunctionSchema<ArgsSchema extends TupleSchema, RetSchema extends Schema> = z.ZodFunction<ArgsSchema, RetSchema>
+
+export type Infer<P extends Schema> = z.infer<P>
 
 
 // ## Helpers
 // ==========
 export const check =
-    (p: Pred, x: any) =>
+    (p: Schema, x: any) =>
         p.safeParse(x).success
 
 export const validate =
-    <P extends Pred>(p: P, x: any) =>
+    <P extends Schema>(p: P, x: any) =>
         p.parse(x) as Infer<P>
 
 
@@ -33,21 +35,76 @@ export enum ValidationMode {
 
 // ## Typechecked + validated functions
 // ====================================
-export function Fn
-    <ArgsPred extends TuplePred, RetPred extends Pred>(
-        argsPred: ArgsPred,
-        retPred: RetPred,
-        f: (...args: Infer<ArgsPred>) => Infer<RetPred>,
-        validationMode: ValidationMode
-    ) {
-    return function (...args: Infer<ArgsPred>) {
-        if (validationMode === ValidationMode.Args || validationMode === ValidationMode.Both)
-            args = validate(argsPred, args)
+export type ArrayOfSchemas = Parameters<(typeof z.ZodTuple)["create"]>[0]
 
-        let ret = f(...args)
-        if (validationMode === ValidationMode.Ret || validationMode === ValidationMode.Both)
-            ret = validate(retPred, ret)
+export interface Fn<ArgsSchema extends TupleSchema | TupleSchema, RetSchema extends Schema> {
+    parameters: () => ArgsSchema;
+    args: <Items extends ArrayOfSchemas>(...items: Items) => Fn<z.ZodTuple<Items, z.ZodUnknown>, RetSchema>;
 
-        return ret as Infer<RetPred>
+    returnType: () => RetSchema;
+    returns: <NewRetSchema extends Schema>(retSchema: NewRetSchema) => FunctionSchema<ArgsSchema, NewRetSchema>;
+
+    functionType: () => FunctionSchema<ArgsSchema, RetSchema>;
+
+    validationMode: () => ValidationMode;
+    setValidationMode: (mode: ValidationMode) => Fn<ArgsSchema, RetSchema>;
+
+    implement: <F extends z.InnerTypeOfFunction<ArgsSchema, RetSchema>>(impl: F) =>
+        ReturnType<F> extends RetSchema["_output"] ?
+        (...args: ArgsSchema["_input"]) => ReturnType<F>
+        : z.OuterTypeOfFunction<ArgsSchema, RetSchema>;
+}
+
+export function Fn<ArgsSchema extends TupleSchema, RetSchema extends Schema>(): Fn<ArgsSchema, RetSchema> {
+    return {
+        parameters: () => z.tuple([]) as ArgsSchema,
+        args: function <Items extends ArrayOfSchemas>(...schemas: Items) {
+            const parametersSchema = z.function().args(...schemas).parameters()
+            return {
+                ...this,
+                parameters: () => parametersSchema
+            }
+        },
+
+        returnType: () => z.any() as unknown as RetSchema,
+        returns: function (retSchema) {
+            return {
+                ...this,
+                returnType: () => retSchema
+            }
+        },
+
+        functionType: function () {
+            return z.function().args(this.parameters()).returns(this.returnType()) as unknown as FunctionSchema<ArgsSchema, RetSchema>
+        },
+
+        validationMode: () => ValidationMode.Both,
+        setValidationMode: function (validationMode: ValidationMode) {
+            return {
+                ...this,
+                validationMode: () => validationMode
+            }
+        },
+
+        implement: function <F extends z.InnerTypeOfFunction<ArgsSchema, RetSchema>>(impl: F) {
+            const argsSchema = this.parameters()
+            const returnSchema = this.returnType()
+            const mode = this.validationMode()
+            const validateArgs = mode === ValidationMode.Args || mode === ValidationMode.Both
+            const validateRet = mode === ValidationMode.Ret || mode === ValidationMode.Both
+
+            return function (...args: Infer<ArgsSchema>) {
+                if (validateArgs)
+                    args = validate(argsSchema, args)
+
+                let ret = impl(...args)
+                if (validateRet)
+                    ret = validate(returnSchema, ret)
+
+                return ret
+            } as ReturnType<F> extends RetSchema["_output"] ?
+                (...args: ArgsSchema["_input"]) => ReturnType<F>
+                : z.OuterTypeOfFunction<ArgsSchema, RetSchema>;
+        }
     }
 }
