@@ -7,7 +7,7 @@
     "type": "git",
     "url": "git+https://github.com/divs1210/zaphod.git"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "index.ts",
   "scripts": {
     "test": "jest",
