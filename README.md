@@ -72,11 +72,11 @@ Others available are `Args`, `Ret`, and `None`.
 
 ```typescript
 const map = <X extends Schema, Y extends Schema>(X: X, Y: Y, L: number) => Fn()
-    .args(
-        z.array(X).length(L),
-        z.function().args(X).returns(Y)
-    )
-    .returns(z.array(Y).length(L))
+    .args(                                    // argslist: [
+        z.array(X).length(L),                 //   X[] of length L
+        z.function().args(X).returns(Y)       //   (x: X) => Y
+    )                                         // ]
+    .returns(z.array(Y).length(L))            // returns: Y[] of length L
     .implement((xs, f) => xs.map(x => f(x)))
 
 const xs = [1, 2, 3]
