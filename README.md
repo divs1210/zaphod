@@ -71,6 +71,8 @@ Others available are `Args`, `Ret`, and `None`.
 ### Generic functions
 
 ```typescript
+import { Schema } from '@divs1210/zaphod'
+
 const map = <X extends Schema, Y extends Schema>(X: X, Y: Y, L: number) => Fn()
     .args(                                    // argslist: [
         z.array(X).length(L),                 //   X[] of length L
@@ -107,7 +109,7 @@ const f = z
     .implement(x => '' + x)
 ```
 
-but it ALWAYS validates the arguments, and also the return (if provided).
+but it ALWAYS validates the arguments schemas, and also the return schema (if provided).
 
 Zaphod allows you to turn off validation for arguments, return values, or both -
 enabling you to write code in a style akin to dependent typing.
