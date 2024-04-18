@@ -120,7 +120,7 @@ describe('Generic Fns', () => {
         expect(ys.length).toBe(xs.length)
     })
 
-    it('map returns array of same length as input', () => {
+    it('reduce returns expected result', () => {
         expect(zs).toBe('123')
     })
 })
